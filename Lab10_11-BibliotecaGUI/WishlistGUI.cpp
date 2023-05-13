@@ -200,8 +200,15 @@ void WishlistGUI::matchWishlistBooksGUI() {
 
 void WishlistGUI::addWishlistGUI() {
 	bool checked = false;
+
+	QListWidget* matchedList = new QListWidget;
 	for (int i = 0; i < lstWishlist->count(); i++) {
-		auto book = lstWishlist->item(i);
+		auto book = lstWishlist->item(i)->clone();
+		matchedList->insertItem(i, book);
+	}
+
+	for (int i = 0; i < matchedList->count(); i++) {
+		auto book = matchedList->item(i);
 		if (book->checkState() == Qt::Checked) {
 			try {
 				bookService.addToWishlist(book->data(Qt::UserRole).toString().toStdString());

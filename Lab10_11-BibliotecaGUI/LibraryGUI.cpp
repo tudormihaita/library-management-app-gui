@@ -237,12 +237,19 @@ void LibraryGUI::connectSignalsSlots() {
 	//stergere
 	QObject::connect(btnDelete, &QPushButton::clicked, this, [this]() {
 		auto selectedBooks = tblBooklist->selectedItems();
+
+		QList<QTableWidgetItem*> booksToRemove;
+		foreach(QTableWidgetItem* book, selectedBooks) {
+			booksToRemove.append(book->clone());
+		}
+
 		if (!selectedBooks.isEmpty()) {
-			for (int i = 0; i < selectedBooks.size(); i+=tblBooklist->columnCount()) {
-				string ISBN = selectedBooks.at(i)->data(0).toString().toStdString();
+			for (int i = 0; i <booksToRemove.size(); i+=tblBooklist->columnCount()) {
+				string ISBN = booksToRemove.at(i)->data(0).toString().toStdString();
 				//qDebug() << ISBN;
 				this->bookService.removeBook(ISBN);
 			}
+
 			//this->reloadBooklist(this->bookService.getAllBooks());
 			//this->reloadGenreReport();
 
