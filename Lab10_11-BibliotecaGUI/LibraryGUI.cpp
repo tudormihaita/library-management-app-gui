@@ -151,9 +151,12 @@ void LibraryGUI::initializeGUI() {
 
 	wishlistLayout->addWidget(this->tblWishlist);
 
+	btnGenerateReport = new QPushButton("Genereaza statistica genuri carti");
+
 	//adaugare toate componente in main layout
 	viewLayout->addWidget(booklistBox);
 	viewLayout->addWidget(wishlistBox);
+	viewLayout->addWidget(btnGenerateReport);
 	rightLayout->addWidget(viewBox);
 	mainLayout->addWidget(leftSide);
 	mainLayout->addWidget(rightSide);
@@ -233,6 +236,9 @@ void LibraryGUI::connectSignalsSlots() {
 
 	//cautare
 	QObject::connect(btnFind, &QPushButton::clicked, this, &LibraryGUI::findBookGUI);
+
+	//afisare report
+	QObject::connect(btnGenerateReport, &QPushButton::clicked, this, &LibraryGUI::generateReportGUI);
 
 	//stergere
 	QObject::connect(btnDelete, &QPushButton::clicked, this, [this]() {
@@ -517,4 +523,46 @@ void LibraryGUI::filterByGenreGUI() {
 			QMessageBox::information(this, "Info", QString::fromStdString("Au fost filtrate toate cartile!"));
 		}
 	}
+}
+
+void LibraryGUI::generateReportGUI() {
+	QWidget* reportWindow = new QWidget;
+	QFormLayout* reportLayout = new QFormLayout;
+	reportWindow->setLayout(reportLayout);
+	reportWindow->setWindowTitle("Statistica genuri carti");
+
+	QTableWidget* tblReport = new QTableWidget;
+	tblReport->setColumnCount(2);
+
+	QStringList tblHeaderReport;
+	tblHeaderReport << "Gen" << "Numar exemplare";
+	tblReport->setHorizontalHeaderLabels(tblHeaderReport);
+	tblReport->setSelectionBehavior(QAbstractItemView::SelectRows);
+
+	tblReport->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+	tblReport->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+
+	unordered_map<string, BookReportDTO> bookReport = this->bookService.getBookReport();
+
+	if (bookReport.empty()) {
+		QMessageBox::warning(reportWindow, "Warning", QString::fromStdString("Nu exista carti adaugate in lista, nu se poate genera o statistica!"));
+		reportWindow->close();
+		return;
+	}
+
+	tblReport->clearContents();
+	tblReport->setRowCount(bookReport.size());
+
+	int lineNumber = 0;
+	for (auto& book : bookReport) {
+		tblReport->setItem(lineNumber, 0, new QTableWidgetItem(QString::fromStdString(book.first)));
+		tblReport->setItem(lineNumber, 1, new QTableWidgetItem(QString::number(book.second.getCount())));
+
+		lineNumber++;
+	}
+
+	reportLayout->addWidget(tblReport);
+
+	reportWindow->show();
+
 }

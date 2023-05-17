@@ -101,6 +101,8 @@ private:
 	QTableWidget* tblBooklist;
 	QTableWidget* tblWishlist;
 
+	QPushButton* btnGenerateReport;
+
 	void update() override {
 		reloadBooklist(bookService.getAllBooks());
 		reloadWishlist(bookService.getWishlistBooks());
@@ -133,6 +135,8 @@ public:
 
 	void filterByReleaseYearGUI();
 	void filterByGenreGUI();
+
+	void generateReportGUI();
 
 	~LibraryGUI() {
 		bookService.removeObserver(this);
