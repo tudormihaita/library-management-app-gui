@@ -41,39 +41,24 @@ void WishlistGUI::intializeGUI() {
 	wishlistOperationsLayout->addWidget(wishlistAddBtns);
 
 	//setup slider - work in progress
-
-	/*QVBoxLayout* sliderLayout = new QVBoxLayout;
-	sliderWishlistBox->setLayout(sliderLayout);
-
 	sliderWishlist = new QSlider(Qt::Horizontal);
 	sliderWishlist->setMinimum(1);
 	sliderWishlist->setMaximum(bookService.getAllBooks().size());
 	sliderWishlist->hasTracking();
-
-	QWidget* labelBox = new QWidget;
-	QHBoxLayout* labelsLayout = new QHBoxLayout;
-	labelBox->setLayout(labelsLayout);
-	minimumLabel = new QLabel(QString::fromStdString("Numarul minim de carti de generat: " + to_string(sliderWishlist->minimum())));
-	maximumLabel = new QLabel(QString::fromStdString("Numarul maxim de carti de generat: " + to_string(sliderWishlist->maximum())));
 	currentLabel = new QLabel(QString::fromStdString("Numarul de carti de generat: " + to_string(sliderWishlist->value())));
-	
-	labelsLayout->addWidget(minimumLabel);
-	labelsLayout->addWidget(currentLabel);
-	labelsLayout->addWidget(maximumLabel);
+	btnAddRandomSliderWishlist = new QPushButton("Adauga random");
 
-	sliderLayout->addWidget(labelBox);
-	sliderLayout->addWidget(sliderWishlist);
-
-	wishlistOperationsLayout->addWidget(sliderWishlistBox);*/
+	wishlistOperationsLayout->addRow(currentLabel, sliderWishlist);
+	wishlistOperationsLayout->addWidget(btnAddRandomSliderWishlist);
 
 	//setup spinbox generare random wishlist
 	generateRandomSpinbox = new QSpinBox;
 	generateRandomSpinbox->setRange(1, bookService.getAllBooks().size());
 	generateRandomSpinbox->setValue(1);
 
-	btnAddRandomToWishlist = new QPushButton("Adauga carti random");
+	btnAddRandomSpinboxWishlist = new QPushButton("Adauga carti random");
 	wishlistOperationsLayout->addRow(lblAddRandomToWishlist, generateRandomSpinbox);
-	wishlistOperationsLayout->addWidget(btnAddRandomToWishlist);
+	wishlistOperationsLayout->addWidget(btnAddRandomSpinboxWishlist);
 
 
 	editExportFileName = new QLineEdit;
@@ -140,8 +125,19 @@ void WishlistGUI::connectSignalsSlots() {
 		}
 	});
 
-	QObject::connect(btnAddRandomToWishlist, &QPushButton::clicked, this, [&]() {
+	QObject::connect(btnAddRandomSpinboxWishlist, &QPushButton::clicked, this, [&]() {
 		const int howMany = generateRandomSpinbox->value();
+		this->bookService.addRandomToWishlist(howMany);
+
+		QMessageBox::information(this, "Info", QString::fromStdString("Wishlist random generat cu succes!"));
+	});
+
+	QObject::connect(sliderWishlist, &QSlider::valueChanged, this, [&]() {
+		currentLabel->setText(QString::fromStdString("Numarul de carti de generat: " + to_string(sliderWishlist->value())));
+	});
+
+	QObject::connect(btnAddRandomSliderWishlist, &QPushButton::clicked, this, [&]() {
+		const int howMany = sliderWishlist->value();
 		this->bookService.addRandomToWishlist(howMany);
 
 		QMessageBox::information(this, "Info", QString::fromStdString("Wishlist random generat cu succes!"));

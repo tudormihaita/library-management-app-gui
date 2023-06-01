@@ -70,6 +70,9 @@
     <ClCompile Include="WishlistGUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TableViewModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Book.h">
@@ -115,6 +118,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Observer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TableViewModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

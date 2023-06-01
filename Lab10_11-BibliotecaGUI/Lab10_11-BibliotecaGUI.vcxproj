@@ -99,6 +99,7 @@
     <ClCompile Include="LibraryGUI.cpp" />
     <ClCompile Include="Repository.cpp" />
     <ClCompile Include="Service.cpp" />
+    <ClCompile Include="TableViewModel.cpp" />
     <ClCompile Include="Tests.cpp" />
     <ClCompile Include="Validator.cpp" />
     <ClCompile Include="Wishlist.cpp" />
@@ -119,6 +120,7 @@
     <ClInclude Include="Exceptions.h" />
     <ClInclude Include="FileRepository.h" />
     <ClInclude Include="Observer.h" />
+    <ClInclude Include="TableViewModel.h" />
     <ClInclude Include="WishlistGUI.h" />
     <ClInclude Include="LibraryGUI.h" />
     <ClInclude Include="LabRepository.h" />

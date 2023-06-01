@@ -16,6 +16,7 @@
 #include "Service.h"
 #include "Observer.h"
 #include "WishlistGUI.h"
+#include "TableViewModel.h"
 
 using std::vector;
 using std::string;
@@ -92,19 +93,26 @@ private:
 	QPushButton* btnFilterByGenre;
 
 	WishlistGUI* wishlistWindow;
+	WishlistDrawGUI* wishlistViewWindow;
 
 	QPushButton* btnReloadData;
 	QPushButton* btnUndoAction;
 	QPushButton* btnWishlistMenu;
 	QPushButton* btnClose;
 
+	QTableView* tblViewBooklist;
+	TableViewModel* modelBooklist;
+
 	QTableWidget* tblBooklist;
+	QListWidget* lstBooklist;
 	QTableWidget* tblWishlist;
 
 	QPushButton* btnGenerateReport;
 
 	void update() override {
-		reloadBooklist(bookService.getAllBooks());
+		//reloadTblBooklist(bookService.getAllBooks());
+		//reloadLstBooklist(bookService.getAllBooks());
+		reloadTblViewBooklist(bookService.getAllBooks());
 		reloadWishlist(bookService.getWishlistBooks());
 		reloadGenreReport();
 	}
@@ -113,7 +121,11 @@ private:
 
 	void connectSignalsSlots();
 
-	void reloadBooklist(vector<Book> booklist);
+	void reloadTblBooklist(vector<Book> booklist);
+
+	void reloadLstBooklist(vector<Book> booklist);
+
+	void reloadTblViewBooklist(vector<Book> booklist);
 
 	void reloadWishlist(vector<Book> wishlist);
 
@@ -124,7 +136,9 @@ public:
 	LibraryGUI(Library& srv) : bookService{ srv } {
 		initializeGUI();
 		connectSignalsSlots();
-		reloadBooklist(bookService.getAllBooks());
+		//reloadTblBooklist(bookService.getAllBooks());
+		//reloadLstBooklist(bookService.getAllBooks());
+		reloadTblViewBooklist(bookService.getAllBooks());
 		reloadWishlist(bookService.getWishlistBooks());
 		reloadGenreReport();
 	};

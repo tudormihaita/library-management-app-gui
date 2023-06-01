@@ -118,10 +118,6 @@ void LibraryGUI::initializeGUI() {
 	QVBoxLayout* viewLayout = new QVBoxLayout;
 	viewBox->setLayout(viewLayout);
 
-	//const int nrLines = 20;
-	//const int nrColumns = 6;
-	//this->tableBooklist = new QTableWidget{ nrLines, nrColumns };
-
 	//setup groupbox vizualizare tabele carti si wishlist
 	QVBoxLayout* booklistLayout = new QVBoxLayout;
 	booklistBox->setLayout(booklistLayout);
@@ -137,7 +133,25 @@ void LibraryGUI::initializeGUI() {
 	this->tblBooklist->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 	this->tblBooklist->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 
-	booklistLayout->addWidget(this->tblBooklist);
+	this->lstBooklist = new QListWidget;
+	this->lstBooklist->setSelectionBehavior(QAbstractItemView::SelectRows);
+	this->lstBooklist->setSizeAdjustPolicy(QAbstractItemView::AdjustToContents);
+	this->lstBooklist->setSelectionMode(QAbstractItemView::MultiSelection);
+
+	this->tblViewBooklist = new QTableView();
+	this->modelBooklist = new TableViewModel(bookService.getAllBooks());
+	this->tblViewBooklist->setModel(modelBooklist);
+	this->tblViewBooklist->setSelectionBehavior(QAbstractItemView::SelectRows);
+	this->tblViewBooklist->setSelectionMode(QAbstractItemView::MultiSelection);
+	this->tblViewBooklist->setSizeAdjustPolicy(QAbstractItemView::AdjustToContents);
+
+	booklistLayout->addWidget(tblViewBooklist);
+
+	//QListWidget view pentru lista de carti
+	//booklistLayout->addWidget(this->lstBooklist);
+
+	//QTableWidget view pentru lista de carti
+	//booklistLayout->addWidget(this->tblBooklist);
 
 	QVBoxLayout* wishlistLayout = new QVBoxLayout;
 	wishlistBox->setLayout(wishlistLayout);
@@ -167,8 +181,14 @@ void LibraryGUI::initializeGUI() {
 	this->setWindowTitle("Library");
 }
 
+void LibraryGUI::reloadTblViewBooklist(vector<Book> booklist) {
+	this->modelBooklist->setBooks(booklist);
 
-void LibraryGUI::reloadBooklist(vector<Book> booklist) {
+	this->tblViewBooklist->setSizeAdjustPolicy(QAbstractItemView::AdjustToContents);
+}
+
+
+void LibraryGUI::reloadTblBooklist(vector<Book> booklist) {
 	this->tblBooklist->clearContents();
 	this->tblBooklist->setRowCount(booklist.size());
 
@@ -183,6 +203,23 @@ void LibraryGUI::reloadBooklist(vector<Book> booklist) {
 
 		lineNumber++;
 	}
+}
+
+void LibraryGUI::reloadLstBooklist(vector<Book> booklist) {
+	this->lstBooklist->clear();
+
+	int lineNumber = 0;
+	for (auto& book : booklist) {
+		this->lstBooklist->insertItem(lineNumber, QString::fromStdString(book.getISBN() + " | " + book.getTitle() + " | " + book.getAuthor()
+			+ " | " + book.getGenre() + " | " + book.getPublisher() + " " + to_string(book.getYear())));
+
+		QListWidgetItem* currentBook = this->lstBooklist->item(lineNumber);
+		currentBook->setData(Qt::UserRole, QString::fromStdString(book.getISBN()));
+
+		lineNumber++;
+	}
+
+	this->lstBooklist->setSizeAdjustPolicy(QAbstractItemView::AdjustToContents);
 }
 
 void LibraryGUI::reloadWishlist(vector<Book> wishlist) {
@@ -240,8 +277,50 @@ void LibraryGUI::connectSignalsSlots() {
 	//afisare report
 	QObject::connect(btnGenerateReport, &QPushButton::clicked, this, &LibraryGUI::generateReportGUI);
 
-	//stergere
+	//stergere TableView
 	QObject::connect(btnDelete, &QPushButton::clicked, this, [this]() {
+		auto selectedBooks = tblViewBooklist->selectionModel()->selectedRows();
+
+		//metoda selectie toate celulele din randurile selectate
+		//auto selectedBooks = tblViewBooklist->selectionModel()->selection().indexes();
+
+		//copie lista elemente selectate (aparent nu mai este necesara pentru stergerea multipla din TableView) 
+		/*QList < QModelIndex> booksToRemove;
+		foreach(QModelIndex book, selectedBooks) {
+			booksToRemove.append(book);
+		}*/
+
+		if (!selectedBooks.isEmpty()) {
+
+			//metoda alternativa iterare carti selectate
+			/*foreach(QModelIndex book, selectedBooks) {
+				string ISBN = book.data(Qt::DisplayRole).toString().toStdString();
+				qDebug() << ISBN;
+				this->bookService.removeBook(ISBN);
+			}*/
+
+			for (int i = 0; i < selectedBooks.count(); i++) {
+				auto index = selectedBooks.at(i);
+				int row = index.row();
+				string ISBN = tblViewBooklist->model()->data(tblViewBooklist->model()->index(row, 0)).toString().toStdString();
+
+				qDebug() << ISBN;
+				this->bookService.removeBook(ISBN);
+			}
+
+			//this->reloadViewBooklist(this->bookService.getAllBooks());
+			//this->reloadGenreReport();
+
+			QMessageBox::information(this, "Info", QString::fromStdString("Cartile selectate au fost sterse cu succes!"));
+		}
+		else {
+			QMessageBox::warning(this, "Warning", QString::fromStdString("Selectati cartile pe care doriti sa le stergeti!"));
+		}
+		});
+
+
+	//stergere QTableWidget
+	/*QObject::connect(btnDelete, &QPushButton::clicked, this, [this]() {
 		auto selectedBooks = tblBooklist->selectedItems();
 
 		QList<QTableWidgetItem*> booksToRemove;
@@ -264,22 +343,48 @@ void LibraryGUI::connectSignalsSlots() {
 		else {
 			QMessageBox::warning(this, "Warning", QString::fromStdString("Selectati cartile pe care doriti sa le stergeti!"));
 		}
-	});
+	});*/
+
+	//stergere QListWidget
+	/*QObject::connect(btnDelete, &QPushButton::clicked, this, [this]() {
+		auto selectedBooks = lstBooklist->selectedItems();
+
+
+		QList<QListWidgetItem*> booksToRemove;
+		foreach(QListWidgetItem * book, selectedBooks) {
+			booksToRemove.append(book->clone());
+		}
+
+		if (!selectedBooks.isEmpty()) {
+			for (int i = 0; i < booksToRemove.size(); i++) {
+				auto book = booksToRemove.at(i);
+				string ISBN = book->data(Qt::UserRole).toString().toStdString();
+				//qDebug() << ISBN;
+				this->bookService.removeBook(ISBN);
+			}
+
+			QMessageBox::information(this, "Info", QString::fromStdString("Cartile selectate au fost sterse cu succes!"));
+		}
+		else {
+			QMessageBox::warning(this, "Warning", QString::fromStdString("Selectati cartile pe care doriti sa le stergeti!"));
+		}
+	});*/
+
 
 	//sortare
 	QObject::connect(btnSortBooks, &QPushButton::clicked, this, [&]() {
 		if (this->radioSortByTitle->isChecked() && this->radioSortAscending->isChecked())
-			this->reloadBooklist(bookService.sortByTitle(false));
+			this->reloadTblViewBooklist(bookService.sortByTitle(false));
 		else if (this->radioSortByTitle->isChecked() && this->radioSortDescending->isChecked())
-			this->reloadBooklist(bookService.sortByTitle(true));
+			this->reloadTblViewBooklist(bookService.sortByTitle(true));
 		else if (this->radioSortByAuthor->isChecked() && this->radioSortAscending->isChecked())
-			this->reloadBooklist(bookService.sortByAuthor(false));
+			this->reloadTblViewBooklist(bookService.sortByAuthor(false));
 		else if (this->radioSortByAuthor->isChecked() && this->radioSortDescending->isChecked())
-			this->reloadBooklist(bookService.sortByAuthor(true));
+			this->reloadTblViewBooklist(bookService.sortByAuthor(true));
 		else if (this->radioSortByReleaseYearAndGenre->isChecked() && this->radioSortAscending->isChecked())
-			this->reloadBooklist(bookService.sortByReleaseYearAndGenre(false));
+			this->reloadTblViewBooklist(bookService.sortByReleaseYearAndGenre(false));
 		else if (this->radioSortByReleaseYearAndGenre->isChecked() && this->radioSortDescending->isChecked())
-			this->reloadBooklist(bookService.sortByReleaseYearAndGenre(true));
+			this->reloadTblViewBooklist(bookService.sortByReleaseYearAndGenre(true));
 		else {
 			QMessageBox::warning(this, "Warning", QString::fromStdString("Selectati un criteriu de sortare si ordinea dorita!"));
 		}
@@ -292,15 +397,16 @@ void LibraryGUI::connectSignalsSlots() {
 
 	//refresh
 	QObject::connect(btnReloadData, &QPushButton::clicked, [&]() {
-		this->reloadBooklist(bookService.getAllBooks());
+		this->reloadTblViewBooklist(bookService.getAllBooks());
 	});
 
 	//undo
 	QObject::connect(btnUndoAction, &QPushButton::clicked, this, [this]() {
 		try {
 			this->bookService.undo();
-			//this->reloadBooklist(bookService.getAllBooks());
-			this->reloadGenreReport();
+
+			//this->reloadTblViewBooklist(bookService.getAllBooks());
+			//this->reloadGenreReport();
 
 			QMessageBox::information(this, "Info", "Undo efectuat cu succes!");
 		}
@@ -312,13 +418,20 @@ void LibraryGUI::connectSignalsSlots() {
 	//wishlist menu
 	QObject::connect(btnWishlistMenu, &QPushButton::clicked, this, [this]() {
 		this->wishlistWindow = new WishlistGUI{ bookService };
+		this->wishlistWindow->move(100, 200);
 		this->wishlistWindow->show();
+	
+
+		this->wishlistViewWindow = new WishlistDrawGUI{ bookService };
+		this->wishlistViewWindow->move(800, 200);
+		this->wishlistViewWindow->show();
 	});
 
 	//close
 	QObject::connect(btnClose, &QPushButton::clicked, this, [this]() {
 		this->close();
 	});
+
 }
 
 void LibraryGUI::addBookGUI() {
@@ -372,8 +485,6 @@ void LibraryGUI::addBookGUI() {
 			editReleaseYear->clear();
 
 			this->bookService.storeBook(id, title, author, genre, publisher, releaseYear);
-			//this->reloadBooklist(this->bookService.getAllBooks());
-			//this->reloadGenreReport();
 
 			QMessageBox::information(addWindow, "Info", QString::fromStdString("Carte adaugata cu succes!"));
 
@@ -432,8 +543,6 @@ void LibraryGUI::updateBookGUI() {
 			editNewPublisher->clear();
 
 			this->bookService.updateBook(ISBN, newGenre, newPublisher);
-			//this->reloadBooklist(this->bookService.getAllBooks());
-			//this->reloadGenreReport();
 
 			QMessageBox::information(updateWindow, "Info", QString::fromStdString("Carte modificata cu succes!"));
 
@@ -502,7 +611,7 @@ void LibraryGUI::filterByReleaseYearGUI() {
 		minFilterYear->clear();
 		maxFilterYear->clear();
 
-		this->reloadBooklist(bookService.filterByReleaseYear(minYear, maxYear));
+		this->reloadTblViewBooklist(bookService.filterByReleaseYear(minYear, maxYear));
 		if (bookService.filterByReleaseYear(minYear, maxYear).size() == 0) {
 			QMessageBox::information(this, "Info", QString::fromStdString("Au fost filtrate toate cartile!"));
 		}
@@ -518,7 +627,7 @@ void LibraryGUI::filterByGenreGUI() {
 
 		editFilterGenre->clear();
 
-		this->reloadBooklist(bookService.filterByGenre(genre));
+		this->reloadTblViewBooklist(bookService.filterByGenre(genre));
 		if (bookService.filterByGenre(genre).size() == 0) {
 			QMessageBox::information(this, "Info", QString::fromStdString("Au fost filtrate toate cartile!"));
 		}
