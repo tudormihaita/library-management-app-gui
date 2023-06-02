@@ -285,10 +285,10 @@ void LibraryGUI::connectSignalsSlots() {
 		//auto selectedBooks = tblViewBooklist->selectionModel()->selection().indexes();
 
 		//copie lista elemente selectate (aparent nu mai este necesara pentru stergerea multipla din TableView) 
-		/*QList < QModelIndex> booksToRemove;
+		QModelIndexList booksToRemove;
 		foreach(QModelIndex book, selectedBooks) {
 			booksToRemove.append(book);
-		}*/
+		}
 
 		if (!selectedBooks.isEmpty()) {
 
@@ -299,8 +299,8 @@ void LibraryGUI::connectSignalsSlots() {
 				this->bookService.removeBook(ISBN);
 			}*/
 
-			for (int i = 0; i < selectedBooks.count(); i++) {
-				auto index = selectedBooks.at(i);
+			for (int i = 0; i < booksToRemove.count(); i++) {
+				auto index = booksToRemove.at(i);
 				int row = index.row();
 				string ISBN = tblViewBooklist->model()->data(tblViewBooklist->model()->index(row, 0)).toString().toStdString();
 

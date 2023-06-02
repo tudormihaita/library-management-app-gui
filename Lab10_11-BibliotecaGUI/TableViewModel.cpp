@@ -106,5 +106,6 @@ void TableViewModel::setBooks(const vector<Book> booklist) {
 	this->books = booklist;
 	auto topLeft = createIndex(0, 0);
 	auto bottomRight = createIndex(rowCount(), columnCount());
+	emit layoutChanged();
 	emit dataChanged(topLeft, bottomRight);
 }
